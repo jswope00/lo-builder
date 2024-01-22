@@ -245,7 +245,7 @@ st.markdown(helper_app_start)
 st.write("---")
 
 # User input sections
-module_title = st.text_input("Enter the title for your course or module (optional)", max_chars=200, key="module_title", value=test_vals["course_title"])
+module_title = st.text_input("Enter the title for your course or module (optional)", max_chars=200, key="module_title")
 learning_content = st.text_area("Enter your learning content", key="learning_content")
 learning_objectives = st.text_area("Enter your learning objectives", key="learning_objectives")
 
