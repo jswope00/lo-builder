@@ -6,23 +6,33 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 st.set_page_config(
+    page_title="Learning Objective Builder (Experimental) | Curricu.me",
+    page_icon='favicon.png',
+        menu_items={
+        'Get Help': 'mailto:john@curricu.me',
+        'Report a bug': "mailto:john@curricu.me",
+        'About': "### Learning Objectives Builder: This micro-app allows you to generate learning objectives or validate alignment for existing learning objectives"
+    },
     initial_sidebar_state="collapsed")
 
 ## helper strings
 help_msg_model_option = "Controls which OpenAI model(s) to use. GPT-4 is more capable, but more expensive."
 help_msg_show_usage = "Display token usage and cost estimates for each query."
-help_msg_api_key = "This app runs by default on GPT 3.5-turbo, for free. To add the option to retreive responses using GPT-4, add your own key. If you add your own key, both GPT-3.5 and GPT-4 will use your key."
+help_msg_api_key = "This app runs by default on GPT 3.5-turbo, for free. To add the option to retreive responses using GPT-4, add your own key. If you add your own key, both GPT-3.5 and GPT-4 will use your key. Your API key is not stored. If you refresh the page, you'll need to enter your key again. "
 help_msg_model_temperature = "Controls how creativity in AI's response"
 help_msg_model_top_p = "Prevents AI from giving certain answers that are too obvious"
 help_msg_model_freq_penalty = "Encourages AI to be more diverse in its answers"
 help_msg_model_presence_penalty = "Prevents AI from repeating itself too much"
 help_msg_max_token = "OpenAI sets a limit on the number of tokens, or individual units of text, that each language model can generate in a single response. For example, text-davinci-003 has a limit of 4000 tokens, while other models have a limit of 2000 tokens. It's important to note that this limit is inclusive of the length of the initial prompt and all messages in the chat session. To ensure the best results, adjust the max token per response based on your specific use case and anticipated dialogue count and length in a session."
-helper_app_start = '''This micro-app allows you to generate learning objectives or validate alignment for existing learning objectives. 
+helper_app_start = '''This micro-app allows you to generate learning objectives or validate alignment for existing learning objectives. It is meant as an experiment to explore how adoption, efficiency, and shareability of generative AI is affected when you wrap lightweight, hyper-personalized wrappers around it. Wrappers like this can take a few hours to build, which fast enough to justify building different micro-apps for different use cases. They also ideally codify good practices (in this case, instructional design practices) into AI prompting. 
 
-It work with either GPT-3.5 Turbo, GPT-4, or both.
+By default, it runs on GPT-3.5 Turbo. If you want to plug in your own API key, it will run GPT-4 and/or GPT-3.5 on your key. 
 
 Optionally, users can modify the AI configuration by opening the left sidebar.
+
 '''
+helper_app_contact = "Developed by John Swope @ [Curricu.me](https://curricu.me) | [Github](https://github.com/jswope00/lo-builder)"
+
 helper_app_need_api_key = "Welcome! This app allows you to test the effectiveness of your prompts using OpenAI's text models: gpt-3.5-turbo, and gpt-4 (if you have access to it). To get started, simply enter your OpenAI API Key below."
 helper_api_key_prompt = "The model comparison tool works best with pay-as-you-go API keys. Free trial API keys are limited to 3 requests a minute, not enough to test your prompts. For more information on OpenAI API rate limits, check [this link](https://platform.openai.com/docs/guides/rate-limits/overview).\n\n- Don't have an API key? No worries! Create one [here](https://platform.openai.com/account/api-keys).\n- Want to upgrade your free-trial API key? Just enter your billing information [here](https://platform.openai.com/account/billing/overview)."
 helper_api_key_placeholder = "Paste your OpenAI API key here (sk-...)"
@@ -292,7 +302,7 @@ def ui_sidebar():
         
 
         st.checkbox(label="Show usage and cost estimate", key='show_usage', value=True, help=help_msg_show_usage, disabled=st.session_state.test_disabled)
-        st.number_input(label="Response Token Limit", key='model_max_tokens', min_value=0, max_value=1000, value=300, step=50, help=help_msg_max_token, disabled=st.session_state.test_disabled)
+        st.number_input(label="Response Token Limit", key='model_max_tokens', min_value=0, max_value=1500, value=1000, step=50, help=help_msg_max_token, disabled=st.session_state.test_disabled)
         st.slider(label="Temperature", min_value=0.0, max_value=1.0, step=0.1, value=0.7, key='model_temperature', help=help_msg_model_temperature, disabled=st.session_state.test_disabled)
         st.slider(label="Top P", min_value=0.0, max_value=1.0, step=0.1, value=1.0, key='model_top_p', help=help_msg_model_top_p, disabled=st.session_state.test_disabled)
         st.slider(label="Frequency penalty", min_value=0.0, max_value=1.0, step=0.1, value=0.0, key='model_frequency_penalty', help=help_msg_model_freq_penalty, disabled=st.session_state.test_disabled)
@@ -356,18 +366,21 @@ with openai_key_container:
 st.title('Learning Objectives Builder')
 st.write("---")
 st.markdown(helper_app_start)
+st.markdown(helper_app_contact,unsafe_allow_html=True)
 st.write("---")
 
 # User input sections
 module_title = st.text_input("Enter the title for your course or module (optional)", max_chars=200, key="module_title")
 learning_content = st.text_area("Enter your learning content", key="learning_content")
-learning_objectives = st.text_area("Enter your learning objectives", key="learning_objectives")
+learning_objectives = st.text_area("Enter your learning objectives (optional)", key="learning_objectives")
 
 request_index = 0
-if learning_content and module_title and not learning_objectives:
+if learning_content and learning_objectives:
+    request_index = 2
+elif learning_content and module_title and not learning_objectives:
     request_index = 0
 elif learning_content and not learning_objectives:
-    request_index = 1
+    request_index = 0
 elif module_title and not learning_objectives:
     request_index = 1
 elif module_title and learning_objectives:
